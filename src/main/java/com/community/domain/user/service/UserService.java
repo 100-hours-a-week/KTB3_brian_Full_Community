@@ -1,7 +1,7 @@
 package com.community.domain.user.service;
 
 import com.community.domain.file.service.FileStorageService;
-import com.community.domain.post.service.PostService;
+import com.community.domain.board.service.PostService;
 import com.community.domain.user.dto.request.PasswordUpdateRequest;
 import com.community.domain.user.dto.request.SignInRequest;
 import com.community.domain.user.dto.request.UpdateRequest;
@@ -13,12 +13,18 @@ import com.community.domain.user.repository.UserRepository;
 import com.community.global.exception.CustomException;
 import com.community.global.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 @Service
 @RequiredArgsConstructor
+@Transactional
 public class UserService {
+
+    @Value("${application.local.default_image_url}")
+    private String DEFAULT_IMAGE_URL;
 
     private final UserRepository userRepository;
     private final FileStorageService fileStorageService;
@@ -26,12 +32,19 @@ public class UserService {
 
     public SignInResponse signIn(SignInRequest req) {
         validateDuplicateUser(req.getEmail(), req.getNickname());
-        String imageUrl = saveProfileImage(req.getFile());
+
+        MultipartFile file = req.getFile();
+        String imageUrl = DEFAULT_IMAGE_URL;
+        if (file != null && !file.isEmpty()) {
+            imageUrl = fileStorageService.save(file);
+        }
+
         Long savedId = userRepository.save(new User(req.getEmail(), req.getPassword(), req.getNickname(), imageUrl));
 
         return new SignInResponse(savedId);
     }
 
+    @Transactional(readOnly = true)
     public SignInAvailableResponse checkAvailableSignInInfo(String email, String nickname) {
         if (email == null && nickname == null) {
             throw new CustomException(ErrorCode.INVALID_CHECK_SIGN_IN_INFO);
@@ -41,6 +54,7 @@ public class UserService {
         return new SignInAvailableResponse(true);
     }
 
+    @Transactional(readOnly = true)
     public UserResponse getUserProfile(Long userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND_USER));
@@ -54,7 +68,7 @@ public class UserService {
 
         if (req.getNickname() != null && !req.getNickname().isBlank()
                 && !req.getNickname().equals(user.getNickname())) {
-            validateDuplicateUser(null, user.getNickname());
+            validateDuplicateUser(null, req.getNickname());
             user.updateNickname(req.getNickname());
         }
 
@@ -66,8 +80,6 @@ public class UserService {
                 fileStorageService.delete(previousImageUrl);
             }
         }
-
-        userRepository.save(user);
     }
 
     public void changePassword(Long userId, PasswordUpdateRequest req) {
@@ -79,7 +91,6 @@ public class UserService {
         }
 
         user.updatePassword(req.getNewPassword());
-        userRepository.save(user);
     }
 
     public void deleteUser(Long userId) {
@@ -104,13 +115,5 @@ public class UserService {
                         throw new CustomException(ErrorCode.DUPLICATED_NICKNAME);
                     });
         }
-    }
-
-    private String saveProfileImage(MultipartFile file) {
-        if (file == null || file.isEmpty()) {
-            return null;
-        }
-
-        return fileStorageService.save(file);
     }
 }

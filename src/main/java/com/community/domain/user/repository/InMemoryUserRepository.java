@@ -1,8 +1,12 @@
 package com.community.domain.user.repository;
 
+import com.community.domain.board.model.Post;
 import com.community.domain.user.model.User;
+import com.community.global.exception.CustomException;
+import com.community.global.exception.ErrorCode;
 import org.springframework.stereotype.Repository;
 
+import java.lang.reflect.Field;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
@@ -18,7 +22,13 @@ public class InMemoryUserRepository implements UserRepository {
     public Long save(User user) {
         if (user.getId() == null) {
             long newId = sequence.incrementAndGet();
-            user.setId(newId);
+            try{
+                Field f = Post.class.getDeclaredField("id");
+                f.setAccessible(true);
+                f.set(user, newId);
+            } catch(Exception e){
+                throw new CustomException(ErrorCode.ID_REFLECTION_PROCESSING_FAILED);
+            }
         }
         store.put(user.getId(), user);
         return user.getId();

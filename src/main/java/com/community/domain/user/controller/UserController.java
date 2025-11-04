@@ -3,6 +3,7 @@ package com.community.domain.user.controller;
 import com.community.domain.auth.annotation.Auth;
 import com.community.domain.auth.annotation.AuthUser;
 import com.community.domain.auth.dto.AuthenticatedUser;
+import com.community.domain.common.util.UriUtil;
 import com.community.domain.user.dto.request.PasswordUpdateRequest;
 import com.community.domain.user.dto.request.SignInRequest;
 import com.community.domain.user.dto.request.UpdateRequest;
@@ -18,8 +19,6 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.net.URI;
-
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/users")
@@ -30,9 +29,11 @@ public class UserController implements UserApiSpec {
     @Override
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<ApiResponse<SignInResponse>> signIn(@ModelAttribute @Valid SignInRequest req) {
+
         SignInResponse res = userService.signIn(req);
+
         return ResponseEntity
-                .created(URI.create("/users/" + res.getId()))
+                .created(UriUtil.makeLocationFromCurrent(res.getId()))
                 .body(ApiResponse.success("회원가입에 성공했습니다.", res));
     }
 

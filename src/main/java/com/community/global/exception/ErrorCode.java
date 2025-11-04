@@ -7,6 +7,9 @@ import org.springframework.http.HttpStatus;
 @Getter
 @RequiredArgsConstructor
 public enum ErrorCode {
+    // common
+    // [500]
+    ID_REFLECTION_PROCESSING_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "Id 값 처리에 실패했습니다."),
 
     // user domain
     // [400]
