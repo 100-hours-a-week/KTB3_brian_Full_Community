@@ -125,4 +125,8 @@ public class CommentService {
                 .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND_USER));
         return new AuthorResponse(user.getId(), user.getNickname(), user.getImageUrl());
     }
+
+    public void deleteAllCommentsByUserId(Long userId) {
+        commentRepository.deleteByUserId(userId);
+    }
 }

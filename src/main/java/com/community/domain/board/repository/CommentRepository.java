@@ -14,4 +14,5 @@ public interface CommentRepository {
     PageResult<Comment> findByPostId(Long postId, PaginationRequest paginationRequest);
     Long countByPostId(Long postId);
     void deleteByPostId(Long postId);
+    void deleteByUserId(Long userId);
 }
