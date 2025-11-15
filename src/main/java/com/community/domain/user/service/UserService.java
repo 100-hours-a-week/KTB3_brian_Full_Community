@@ -88,11 +88,7 @@ public class UserService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND_USER));
 
-        if (!user.getPassword().equals(req.getCurrentPassword())) {
-            throw new CustomException(ErrorCode.INVALID_CURRENT_PASSWORD);
-        }
-
-        user.updatePassword(req.getNewPassword());
+        user.updatePassword(req.getPassword());
     }
 
     public void deleteUser(Long userId) {
