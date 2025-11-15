@@ -10,4 +10,6 @@ public interface FileStorageService {
     StoredFile load(String fileId);
 
     void delete(String filePath);
+
+    String saveManual(MultipartFile file, String fileId);
 }
