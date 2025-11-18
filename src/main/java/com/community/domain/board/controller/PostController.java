@@ -14,6 +14,7 @@ import com.community.domain.board.dto.response.PostListResponse;
 import com.community.domain.board.dto.response.PostSingleResponse;
 import com.community.domain.board.service.PostService;
 import com.community.global.response.ApiResponse;
+import com.community.global.response.SuccessMessage;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -37,7 +38,7 @@ public class PostController implements PostApiSpec {
 
         return ResponseEntity
                 .ok()
-                .body(ApiResponse.success("게시글 목록 조회에 성공했습니다.", response));
+                .body(ApiResponse.success(SuccessMessage.POST_LIST_FETCHED, response));
     }
 
     @Override
@@ -49,7 +50,7 @@ public class PostController implements PostApiSpec {
 
         return ResponseEntity
                 .created(UriUtil.makeLocationFromCurrent(res.getId()))
-                .body(ApiResponse.success("게시글이 등록되었습니다.", res));
+                .body(ApiResponse.success(SuccessMessage.POST_CREATED, res));
     }
 
     @Override
@@ -59,7 +60,7 @@ public class PostController implements PostApiSpec {
 
         return ResponseEntity
                 .ok()
-                .body(ApiResponse.success("게시글 상세 조회에 성공했습니다.", response));
+                .body(ApiResponse.success(SuccessMessage.POST_FETCHED, response));
     }
 
     @Override
@@ -72,7 +73,7 @@ public class PostController implements PostApiSpec {
 
         return ResponseEntity
                 .ok()
-                .body(ApiResponse.success("게시글이 수정되었습니다.", response));
+                .body(ApiResponse.success(SuccessMessage.POST_UPDATED, response));
     }
 
     @Override
@@ -84,7 +85,7 @@ public class PostController implements PostApiSpec {
 
         return ResponseEntity
                 .status(HttpStatus.NO_CONTENT)
-                .body(ApiResponse.success("게시글이 삭제되었습니다."));
+                .body(ApiResponse.success(SuccessMessage.POST_DELETED));
     }
 
     @Override
@@ -93,7 +94,7 @@ public class PostController implements PostApiSpec {
     public ResponseEntity<ApiResponse<Void>> toggleLike(@PathVariable Long postId,
                                                         @AuthUser AuthenticatedUser authenticatedUser) {
         PostLikeResponse response = postService.toggleLike(postId, authenticatedUser.userId());
-        String message = response.isLiked() ? "게시글에 좋아요를 표시했습니다." : "게시글 좋아요가 취소되었습니다.";
+        String message = response.isLiked() ? SuccessMessage.POST_LIKED : SuccessMessage.POST_LIKE_CANCELLED;
 
         return ResponseEntity
                 .ok()
@@ -109,6 +110,6 @@ public class PostController implements PostApiSpec {
 
         return ResponseEntity
                 .ok()
-                .body(ApiResponse.success("유저의 게시글 좋아요 여부 조회에 성공했습니다.", res));
+                .body(ApiResponse.success(SuccessMessage.POST_LIKE_STATUS_FETCHED, res));
     }
 }

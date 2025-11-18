@@ -3,6 +3,7 @@ package com.community.domain.auth.service;
 import com.community.domain.auth.dto.LoginResult;
 import com.community.domain.auth.dto.response.LoginResponse;
 import com.community.global.response.ApiResponse;
+import com.community.global.response.SuccessMessage;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
@@ -18,7 +19,7 @@ public class TokenAuthResponseMaker implements AuthResponseMaker {
         return ResponseEntity
                 .ok()
                 .header(HttpHeaders.SET_COOKIE, refreshCookie.toString())
-                .body(ApiResponse.success("로그인에 성공하였습니다.", result.tokenResponse()));
+                .body(ApiResponse.success(SuccessMessage.LOGIN_SUCCESS, result.tokenResponse()));
     }
 
     @Override
@@ -28,7 +29,7 @@ public class TokenAuthResponseMaker implements AuthResponseMaker {
         return ResponseEntity
                 .ok()
                 .header(HttpHeaders.SET_COOKIE, refreshCookie.toString())
-                .body(ApiResponse.success("토큰이 갱신되었습니다.", result.tokenResponse()));
+                .body(ApiResponse.success(SuccessMessage.TOKEN_REFRESHED, result.tokenResponse()));
     }
 
     private ResponseCookie makeResponseCookie(LoginResult result) {
