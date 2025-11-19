@@ -10,8 +10,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 @Service
 @Slf4j
@@ -37,11 +39,13 @@ public class PostViewEventService {
         }
 
         Map<Long, Long> countByPost = new HashMap<>();
+        Set<Long> processedEventIds = new HashSet<>();
         for (PostViewEvent event : rows) {
             countByPost.merge(event.getPostId(), 1L, Long::sum);
+            processedEventIds.add(event.getId());
         }
 
         countByPost.forEach(postRepository::increaseViewCount);
-        jpaPostViewEventRepository.updateStatus(countByPost.keySet());
+        jpaPostViewEventRepository.updateStatus(processedEventIds);
     }
 }
