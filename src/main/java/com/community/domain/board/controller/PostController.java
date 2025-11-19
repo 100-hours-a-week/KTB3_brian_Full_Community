@@ -3,16 +3,15 @@ package com.community.domain.board.controller;
 import com.community.domain.auth.annotation.Auth;
 import com.community.domain.auth.annotation.AuthUser;
 import com.community.domain.auth.dto.AuthenticatedUser;
-import com.community.domain.common.page.PageResponse;
-import com.community.domain.common.page.PaginationRequest;
-import com.community.domain.common.util.UriUtil;
 import com.community.domain.board.dto.request.PostCreateRequest;
 import com.community.domain.board.dto.request.PostUpdateRequest;
 import com.community.domain.board.dto.response.PostIdResponse;
 import com.community.domain.board.dto.response.PostLikeResponse;
-import com.community.domain.board.dto.response.PostListResponse;
 import com.community.domain.board.dto.response.PostSingleResponse;
 import com.community.domain.board.service.PostService;
+import com.community.domain.common.page.PageResponse;
+import com.community.domain.common.page.PaginationRequest;
+import com.community.domain.common.util.UriUtil;
 import com.community.global.response.ApiResponse;
 import com.community.global.response.SuccessMessage;
 import jakarta.validation.Valid;
@@ -39,6 +38,30 @@ public class PostController implements PostApiSpec {
         return ResponseEntity
                 .ok()
                 .body(ApiResponse.success(SuccessMessage.POST_LIST_FETCHED, response));
+    }
+
+    @Auth
+    @GetMapping("/me")
+    public ResponseEntity<ApiResponse<PageResponse<PostSingleResponse>>> getPostsByUserId(
+            @ModelAttribute PaginationRequest paginationRequest,
+            @AuthUser AuthenticatedUser authenticatedUser) {
+        PageResponse<PostSingleResponse> res = postService.getPostsByUserId(paginationRequest, authenticatedUser.userId());
+
+        return ResponseEntity
+                .ok()
+                .body(ApiResponse.success(SuccessMessage.POST_LIST_FETCHED, res));
+    }
+
+    @Auth
+    @GetMapping("/like")
+    public ResponseEntity<ApiResponse<PageResponse<PostSingleResponse>>> getLikedPostsByUserId(
+            @ModelAttribute PaginationRequest paginationRequest,
+            @AuthUser AuthenticatedUser authenticatedUser) {
+        PageResponse<PostSingleResponse> res = postService.getPostsByPostLikeUserId(paginationRequest, authenticatedUser.userId());
+
+        return ResponseEntity
+                .ok()
+                .body(ApiResponse.success(SuccessMessage.POST_LIST_FETCHED, res));
     }
 
     @Override

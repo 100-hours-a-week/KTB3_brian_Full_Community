@@ -51,6 +51,40 @@ public class PostService {
                 paginationRequest.size());
     }
 
+    @Transactional(readOnly = true)
+    public PageResponse<PostSingleResponse> getPostsByUserId(PaginationRequest paginationRequest, Long userId) {
+        PageResult<Post> pageResult = postRepository.findByUserId(userId, paginationRequest);
+
+        List<PostSingleResponse> items = pageResult.items().stream()
+                .map(this::toSingleResponse)
+                .toList();
+
+        return new PageResponse<>(
+                items,
+                pageResult.totalElements(),
+                pageResult.totalPages(),
+                paginationRequest.page(),
+                paginationRequest.size()
+        );
+    }
+
+    @Transactional(readOnly = true)
+    public PageResponse<PostSingleResponse> getPostsByPostLikeUserId(PaginationRequest paginationRequest, Long userId) {
+        PageResult<Post> pageResult = postRepository.findByPostLikeUserId(userId, paginationRequest);
+
+        List<PostSingleResponse> items = pageResult.items().stream()
+                .map(this::toSingleResponse)
+                .toList();
+
+        return new PageResponse<>(
+                items,
+                pageResult.totalElements(),
+                pageResult.totalPages(),
+                paginationRequest.page(),
+                paginationRequest.size()
+        );
+    }
+
     public PostSingleResponse viewPost(Long postId) {
         Post post = findPost(postId);
         postViewEventService.addEvent(postId);
