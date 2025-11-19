@@ -67,6 +67,56 @@ public class JpaPostRepository implements PostRepository {
     }
 
     @Override
+    public PageResult<Post> findByUserId(Long userId, PaginationRequest paginationRequest) {
+
+        int page = paginationRequest.page();
+        int size = paginationRequest.size();
+        int offset = page * size;
+
+        String sortProperty = resolveSortProperty(paginationRequest.sortBy());
+        String direction = PageUtil.resolveDirection(paginationRequest.direction());
+
+        String query = "select p from Post p join fetch p.user u where u.id = :userId order by p." + sortProperty + " " + direction;
+        List<Post> posts = em.createQuery(query, Post.class)
+                .setParameter("userId", userId)
+                .setFirstResult(offset)
+                .setMaxResults(size)
+                .getResultList();
+
+        Long totalElements = em.createQuery("select count(p) from Post p", Long.class)
+                .getSingleResult();
+
+        int totalPages = PageUtil.calculateTotalPages(totalElements, size);
+
+        return new PageResult<>(posts, totalElements, totalPages);
+    }
+
+    @Override
+    public PageResult<Post> findByPostLikeUserId(Long userId, PaginationRequest paginationRequest) {
+
+        int page = paginationRequest.page();
+        int size = paginationRequest.size();
+        int offset = page * size;
+
+        String sortProperty = resolveSortProperty(paginationRequest.sortBy());
+        String direction = PageUtil.resolveDirection(paginationRequest.direction());
+
+        String query = "select p from PostLike pl join pl.post p where pl.user.id = :userId order by p." + sortProperty + " " + direction;
+        List<Post> posts = em.createQuery(query, Post.class)
+                .setParameter("userId", userId)
+                .setFirstResult(offset)
+                .setMaxResults(size)
+                .getResultList();
+
+        Long totalElements = em.createQuery("select count(p) from Post p", Long.class)
+                .getSingleResult();
+
+        int totalPages = PageUtil.calculateTotalPages(totalElements, size);
+
+        return new PageResult<>(posts, totalElements, totalPages);
+    }
+
+    @Override
     public void increaseViewCount(Long postId, long increment) {
         if (increment <= 0) {
             return;

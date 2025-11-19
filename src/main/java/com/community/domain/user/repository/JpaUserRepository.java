@@ -8,6 +8,7 @@ import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
+import java.util.function.Supplier;
 
 @Primary
 @Repository
@@ -35,21 +36,21 @@ public class JpaUserRepository implements UserRepository {
 
     @Override
     public Optional<User> findByEmail(String email) {
-        try {
-            return Optional.of(em.createQuery("select u from User u where u.email = :email", User.class)
-                    .setParameter("email", email)
-                    .getSingleResult());
-        } catch (NoResultException e) {
-            return Optional.empty();
-        }
+        return fetchSingleResult(() -> em.createQuery("select u from User u where u.email = :email", User.class)
+                .setParameter("email", email)
+                .getSingleResult());
     }
 
     @Override
     public Optional<User> findByNickname(String nickName) {
+        return fetchSingleResult(() -> em.createQuery("select u from User u where u.nickname = :nickname", User.class)
+                .setParameter("nickname", nickName)
+                .getSingleResult());
+    }
+
+    private <T> Optional<T> fetchSingleResult(Supplier<T> supplier) {
         try {
-            return Optional.of(em.createQuery("select u from User u where u.nickname = :nickname", User.class)
-                    .setParameter("nickname", nickName)
-                    .getSingleResult());
+            return Optional.ofNullable(supplier.get());
         } catch (NoResultException e) {
             return Optional.empty();
         }

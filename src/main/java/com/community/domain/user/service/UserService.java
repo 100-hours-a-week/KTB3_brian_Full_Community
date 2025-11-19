@@ -1,5 +1,6 @@
 package com.community.domain.user.service;
 
+import com.community.domain.board.service.CommentService;
 import com.community.domain.file.service.FileStorageService;
 import com.community.domain.board.service.PostService;
 import com.community.domain.user.dto.request.PasswordUpdateRequest;
@@ -29,6 +30,7 @@ public class UserService {
     private final UserRepository userRepository;
     private final FileStorageService fileStorageService;
     private final PostService postService;
+    private final CommentService commentService;
 
     public SignInResponse signIn(SignInRequest req) {
         validateDuplicateUser(req.getEmail(), req.getNickname());
@@ -86,11 +88,7 @@ public class UserService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND_USER));
 
-        if (!user.getPassword().equals(req.getCurrentPassword())) {
-            throw new CustomException(ErrorCode.INVALID_CURRENT_PASSWORD);
-        }
-
-        user.updatePassword(req.getNewPassword());
+        user.updatePassword(req.getPassword());
     }
 
     public void deleteUser(Long userId) {
@@ -98,6 +96,7 @@ public class UserService {
                 .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND_USER));
         fileStorageService.delete(user.getImageUrl());
         postService.deleteAllPostByUserId(userId);
+        commentService.deleteAllCommentsByUserId(userId);
         userRepository.delete(user);
     }
 

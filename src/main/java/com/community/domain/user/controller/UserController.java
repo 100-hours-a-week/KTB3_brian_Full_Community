@@ -12,6 +12,7 @@ import com.community.domain.user.dto.response.SignInResponse;
 import com.community.domain.user.dto.response.UserResponse;
 import com.community.domain.user.service.UserService;
 import com.community.global.response.ApiResponse;
+import com.community.global.response.SuccessMessage;
 import jakarta.annotation.Nullable;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -34,7 +35,7 @@ public class UserController implements UserApiSpec {
 
         return ResponseEntity
                 .created(UriUtil.makeLocationFromCurrent(res.getId()))
-                .body(ApiResponse.success("회원가입에 성공했습니다.", res));
+                .body(ApiResponse.success(SuccessMessage.SIGN_UP_SUCCESS, res));
     }
 
     @Override
@@ -44,7 +45,7 @@ public class UserController implements UserApiSpec {
         SignInAvailableResponse res = userService.checkAvailableSignInInfo(email, nickname);
         return ResponseEntity
                 .ok()
-                .body(ApiResponse.success("사용할 수 있는 정보입니다.", res));
+                .body(ApiResponse.success(SuccessMessage.SIGN_UP_INFO_AVAILABLE, res));
     }
 
     @Override
@@ -54,7 +55,7 @@ public class UserController implements UserApiSpec {
         UserResponse profile = userService.getUserProfile(authenticatedUser.userId());
         return ResponseEntity
                 .ok()
-                .body(ApiResponse.success("사용자 정보 조회에 성공했습니다.", profile));
+                .body(ApiResponse.success(SuccessMessage.PROFILE_FETCHED, profile));
     }
 
     @Override
@@ -66,7 +67,7 @@ public class UserController implements UserApiSpec {
 
         return ResponseEntity
                 .ok()
-                .body(ApiResponse.success("사용자 정보가 수정되었습니다.", null));
+                .body(ApiResponse.success(SuccessMessage.PROFILE_UPDATED));
     }
 
     @Override
@@ -78,7 +79,7 @@ public class UserController implements UserApiSpec {
 
         return ResponseEntity
                 .ok()
-                .body(ApiResponse.success("비밀번호가 수정되었습니다.", null));
+                .body(ApiResponse.success(SuccessMessage.PASSWORD_UPDATED));
     }
 
     @Override

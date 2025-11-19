@@ -67,4 +67,9 @@ public class InMemoryCommentRepository implements CommentRepository {
     public void deleteByPostId(Long postId) {
         store.values().removeIf(comment -> Objects.equals(comment.getPost().getId(), postId));
     }
+
+    @Override
+    public void deleteByUserId(Long userId) {
+        store.values().removeIf(comment -> Objects.equals(comment.getUser().getId(), userId));
+    }
 }

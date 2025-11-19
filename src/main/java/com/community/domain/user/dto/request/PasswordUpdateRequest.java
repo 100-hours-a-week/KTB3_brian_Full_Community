@@ -13,13 +13,9 @@ import static com.community.global.validation.MessageConstants.PASSWORD_SIZE_INV
 @Data
 public class PasswordUpdateRequest {
 
-    @Schema(description = "현재 비밀번호", example = "a1234567890A!")
-    @NotBlank(message = PASSWORD_REQUIRED)
-    private String currentPassword;
-
     @Schema(description = "새로운 비밀번호", example = "A1234567890a!")
     @NotBlank(message = PASSWORD_REQUIRED)
     @Password
     @Size(min = 8, max = 20, message = PASSWORD_SIZE_INVALID)
-    private String newPassword;
+    private String password;
 }

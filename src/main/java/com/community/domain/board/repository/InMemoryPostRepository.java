@@ -60,6 +60,16 @@ public class InMemoryPostRepository implements PostRepository {
     }
 
     @Override
+    public PageResult<Post> findByUserId(Long userId, PaginationRequest paginationRequest) {
+        return null;
+    }
+
+    @Override
+    public PageResult<Post> findByPostLikeUserId(Long postId, PaginationRequest paginationRequest) {
+        return null;
+    }
+
+    @Override
     public void increaseViewCount(Long postId, long increment) {
         if (increment <= 0) {
             return;

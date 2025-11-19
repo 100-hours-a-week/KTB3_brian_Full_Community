@@ -11,6 +11,7 @@ import com.community.domain.common.page.PageResponse;
 import com.community.domain.common.page.PaginationRequest;
 import com.community.domain.common.util.UriUtil;
 import com.community.global.response.ApiResponse;
+import com.community.global.response.SuccessMessage;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -32,7 +33,7 @@ public class CommentController implements CommentApiSpec {
 
         return ResponseEntity
                 .ok()
-                .body(ApiResponse.success("게시글 댓글 조회에 성공했습니다.", res));
+                .body(ApiResponse.success(SuccessMessage.COMMENT_LIST_FETCHED, res));
     }
 
     @Override
@@ -46,7 +47,7 @@ public class CommentController implements CommentApiSpec {
 
         return ResponseEntity
                 .created(UriUtil.makeLocationFromCurrent(res.getId()))
-                .body(ApiResponse.success("게시글 댓글 등록에 성공했습니다.", res));
+                .body(ApiResponse.success(SuccessMessage.COMMENT_CREATED, res));
     }
 
     @Override
@@ -60,7 +61,7 @@ public class CommentController implements CommentApiSpec {
 
         return ResponseEntity
                 .ok()
-                .body(ApiResponse.success("게시글 댓글 수정에 성공했습니다.", response));
+                .body(ApiResponse.success(SuccessMessage.COMMENT_UPDATED, response));
     }
 
     @Override
@@ -73,6 +74,6 @@ public class CommentController implements CommentApiSpec {
 
         return ResponseEntity
                 .status(HttpStatus.NO_CONTENT)
-                .body(ApiResponse.success("게시글 댓글 삭제에 성공했습니다."));
+                .body(ApiResponse.success(SuccessMessage.COMMENT_DELETED));
     }
 }
