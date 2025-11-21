@@ -1,5 +1,6 @@
 package com.community.domain.auth;
 
+import com.community.domain.auth.dto.AuthenticatedUser;
 import com.community.domain.auth.dto.TokenPayload;
 import com.community.domain.auth.dto.TokenResult;
 import com.community.domain.auth.service.TokenProvider;
@@ -8,8 +9,12 @@ import com.community.global.exception.ErrorCode;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpHeaders;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.Mac;
@@ -55,6 +60,26 @@ public class JwtTokenProvider implements TokenProvider {
     public TokenResult createToken(Map<String, Object> claims, TokenType tokenType) {
         Long expiresIn = tokenType.equals(TokenType.ACCESS) ? ACCESS_TOKEN_EXPIRATION_TIME : REFRESH_TOKEN_EXPIRATION_TIME;
         return createToken(claims, expiresIn, tokenType);
+    }
+
+    @Override
+    public String resolveToken(HttpServletRequest request) {
+        String authorization = request.getHeader(HttpHeaders.AUTHORIZATION);
+        if (authorization == null || !authorization.startsWith("Bearer ")) {
+            throw new CustomException(ErrorCode.UNAUTHORIZED_USER);
+        }
+
+        return authorization.substring(7);
+    }
+
+    @Override
+    public Authentication getAuthentication(String token) {
+        TokenPayload tokenPayload = parseToken(token, TokenType.ACCESS);
+
+        return new UsernamePasswordAuthenticationToken(
+                new AuthenticatedUser(tokenPayload.userId()),
+                null
+        );
     }
 
     private TokenPayload validateAndGetTokenPayload(String token) {
