@@ -36,75 +36,81 @@ public class JwtTokenProvider implements TokenProvider {
     private String JWT_SECRET;
 
     private static final String HMAC_ALGORITHM = "HmacSHA256";
-    private static final String TOKEN_TYPE_ACCESS = "access";
-    private static final String TOKEN_TYPE_REFRESH = "refresh";
+
     private static final Base64.Encoder BASE64_ENCODER = Base64.getUrlEncoder().withoutPadding();
     private static final Base64.Decoder BASE64_DECODER = Base64.getUrlDecoder();
 
     private final ObjectMapper objectMapper;
 
     @Override
-    public TokenPayload parseAccessToken(String token) {
-        TokenPayload payload = parseToken(token);
-        if (!TOKEN_TYPE_ACCESS.equals(payload.type())) {
+    public TokenPayload parseToken(String token, TokenType tokenType) {
+        TokenPayload payload = validateAndGetTokenPayload(token);
+        if (!tokenType.toString().equals(payload.type())) {
             throw new CustomException(ErrorCode.INVALID_TOKEN);
         }
         return payload;
     }
 
     @Override
-    public TokenPayload parseRefreshToken(String token) {
-        TokenPayload payload = parseToken(token);
-        if (!TOKEN_TYPE_REFRESH.equals(payload.type())) {
+    public TokenResult createToken(Map<String, Object> claims, TokenType tokenType) {
+        Long expiresIn = tokenType.equals(TokenType.ACCESS) ? ACCESS_TOKEN_EXPIRATION_TIME : REFRESH_TOKEN_EXPIRATION_TIME;
+        return createToken(claims, expiresIn, tokenType);
+    }
+
+    private TokenPayload validateAndGetTokenPayload(String token) {
+        String[] parts = splitToken(token);
+        verifySignature(parts);
+        Map<String, Object> payloadMap = parsePayload(parts[1]);
+        verifyExpiry(payloadMap);
+        return toTokenPayload(payloadMap);
+    }
+
+    private String[] splitToken(String token) {
+        String[] parts = token.split("\\.");
+        if (parts.length != 3) {
             throw new CustomException(ErrorCode.INVALID_TOKEN);
         }
-        return payload;
+        return parts;
     }
 
-    @Override
-    public TokenResult createAccessToken(Map<String, Object> claims) {
-        return createToken(claims, ACCESS_TOKEN_EXPIRATION_TIME, TOKEN_TYPE_ACCESS);
+    private void verifySignature(String[] parts) {
+        String unsignedToken = parts[0] + "." + parts[1];
+        String expectedSignature = sign(unsignedToken);
+        if (!constantTimeEquals(expectedSignature, parts[2])) {
+            throw new CustomException(ErrorCode.INVALID_TOKEN);
+        }
     }
 
-    @Override
-    public TokenResult createRefreshToken(Map<String, Object> claims) {
-        return createToken(claims, REFRESH_TOKEN_EXPIRATION_TIME, TOKEN_TYPE_REFRESH);
-    }
-
-    private TokenPayload parseToken(String token) {
+    private Map<String, Object> parsePayload(String encodedPayload) {
         try {
-            String[] parts = token.split("\\.");
-            if (parts.length != 3) {
-                throw new CustomException(ErrorCode.INVALID_TOKEN);
-            }
-
-            String unsignedToken = parts[0] + "." + parts[1];
-            String expectedSignature = sign(unsignedToken);
-            if (!constantTimeEquals(expectedSignature, parts[2])) {
-                throw new CustomException(ErrorCode.INVALID_TOKEN);
-            }
-
-            Map<String, Object> payloadMap = objectMapper.readValue(
-                    new String(BASE64_DECODER.decode(parts[1]), StandardCharsets.UTF_8),
+            return objectMapper.readValue(
+                    new String(BASE64_DECODER.decode(encodedPayload), StandardCharsets.UTF_8),
                     new TypeReference<>() {
                     }
             );
-
-            long expiresAt = ((Number) payloadMap.get("exp")).longValue();
-            Instant expiryInstant = Instant.ofEpochSecond(expiresAt);
-            if (Instant.now().isAfter(expiryInstant)) {
-                throw new CustomException(ErrorCode.EXPIRED_TOKEN);
-            }
-
-            Long userId = Long.valueOf(payloadMap.get("sub").toString());
-            String type = payloadMap.get("type").toString();
-            return new TokenPayload(userId, expiryInstant, type);
         } catch (JsonProcessingException | IllegalArgumentException ex) {
             throw new CustomException(ErrorCode.INVALID_TOKEN);
         }
     }
 
-    private TokenResult createToken(Map<String, Object> claims, long expirationSeconds, String type) {
+    private void verifyExpiry(Map<String, Object> payloadMap) {
+        long expiresAt = ((Number) payloadMap.get("exp")).longValue();
+        Instant expiryInstant = Instant.ofEpochSecond(expiresAt);
+        if (Instant.now().isAfter(expiryInstant)) {
+            throw new CustomException(ErrorCode.EXPIRED_TOKEN);
+        }
+    }
+
+    private TokenPayload toTokenPayload(Map<String, Object> payloadMap) {
+        Long userId = Long.valueOf(payloadMap.get("sub").toString());
+        String type = payloadMap.get("type").toString();
+        long expiresAt = ((Number) payloadMap.get("exp")).longValue();
+        Instant expiryInstant = Instant.ofEpochSecond(expiresAt);
+
+        return new TokenPayload(userId, expiryInstant, type);
+    }
+
+    private TokenResult createToken(Map<String, Object> claims, long expirationSeconds, TokenType type) {
         try {
             Instant now = Instant.now();
             Instant expiresAt = now.plusSeconds(expirationSeconds);
