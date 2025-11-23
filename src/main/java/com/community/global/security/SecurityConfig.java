@@ -18,6 +18,11 @@ import java.util.List;
 @RequiredArgsConstructor
 public class SecurityConfig {
 
+    public static final String[] PERMIT_ALL_PATTERNS = {
+            "/auth/login",
+            "/users/availability"
+    };
+
     private final JwtFilter jwtFilter;
     private final CustomAuthenticationEntryPoint customAuthenticationEntryPoint;
 
@@ -27,14 +32,19 @@ public class SecurityConfig {
         http
                 .csrf(AbstractHttpConfigurer::disable)
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+
                 .formLogin(AbstractHttpConfigurer::disable)
                 .httpBasic(AbstractHttpConfigurer::disable)
+
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+
                 .exceptionHandling(exception -> exception
                         .authenticationEntryPoint(customAuthenticationEntryPoint))
+
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/auth/login", "/users/availability").permitAll()
+                        .requestMatchers(PERMIT_ALL_PATTERNS).permitAll()
                         .anyRequest().authenticated())
+
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
@@ -45,7 +55,7 @@ public class SecurityConfig {
         CorsConfiguration configuration = new CorsConfiguration();
 
         // 허용할 출처 설정
-        configuration.setAllowedOrigins(List.of("<http://127.0.0.1:5501>"));
+        configuration.setAllowedOrigins(List.of("http://127.0.0.1:5501"));
 
         // 허용할 HTTP 메서드 설정
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));

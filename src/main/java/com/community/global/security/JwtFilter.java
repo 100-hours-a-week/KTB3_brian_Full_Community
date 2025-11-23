@@ -7,12 +7,15 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpHeaders;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
+import org.springframework.util.AntPathMatcher;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.util.Arrays;
 
 @Component
 @RequiredArgsConstructor
@@ -20,6 +23,7 @@ public class JwtFilter extends OncePerRequestFilter {
 
     private final TokenProvider tokenProvider;
     private final CustomAuthenticationExceptionResolver customAuthenticationExceptionResolver;
+    private static final AntPathMatcher PATH_MATCHER = new AntPathMatcher();
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,
@@ -35,5 +39,18 @@ public class JwtFilter extends OncePerRequestFilter {
         } catch (CustomException ex) {
             throw customAuthenticationExceptionResolver.resolve(ex);
         }
+    }
+
+    @Override
+    protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
+        String requestUri = request.getRequestURI();
+        boolean isPermitAllPath = Arrays.stream(SecurityConfig.PERMIT_ALL_PATTERNS)
+                .anyMatch(pattern -> PATH_MATCHER.match(pattern, requestUri));
+        if (isPermitAllPath) {
+            return true;
+        }
+
+        String authorization = request.getHeader(HttpHeaders.AUTHORIZATION);
+        return authorization == null || !authorization.startsWith("Bearer ");
     }
 }
