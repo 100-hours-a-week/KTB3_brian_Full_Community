@@ -24,6 +24,7 @@ import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.time.Instant;
 import java.util.Base64;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -78,7 +79,8 @@ public class JwtTokenProvider implements TokenProvider {
 
         return new UsernamePasswordAuthenticationToken(
                 new AuthenticatedUser(tokenPayload.userId()),
-                null
+                null,
+                Collections.emptyList()
         );
     }
 
