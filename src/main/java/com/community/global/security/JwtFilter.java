@@ -43,9 +43,8 @@ public class JwtFilter extends OncePerRequestFilter {
 
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
-        String requestUri = request.getRequestURI();
-        boolean isPermitAllPath = Arrays.stream(SecurityConfig.PERMIT_ALL_PATTERNS)
-                .anyMatch(pattern -> PATH_MATCHER.match(pattern, requestUri));
+        boolean isPermitAllPath = Arrays.stream(SecurityConfig.PERMIT_ALL_MATCHERS)
+                .anyMatch(pattern -> pattern.matches(request));
         if (isPermitAllPath) {
             return true;
         }

@@ -3,11 +3,14 @@ package com.community.global.security;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.servlet.util.matcher.PathPatternRequestMatcher;
+import org.springframework.security.web.util.matcher.RequestMatcher;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -18,10 +21,12 @@ import java.util.List;
 @RequiredArgsConstructor
 public class SecurityConfig {
 
-    public static final String[] PERMIT_ALL_PATTERNS = {
-            "/auth/login",
-            "/users/availability",
-            "/users"
+    private static final PathPatternRequestMatcher.Builder MATCHER = PathPatternRequestMatcher.withDefaults();
+
+    public static final RequestMatcher[] PERMIT_ALL_MATCHERS = {
+            MATCHER.matcher(HttpMethod.POST, "/auth/login"),
+            MATCHER.matcher(HttpMethod.GET, "/users/availability"),
+            MATCHER.matcher(HttpMethod.POST, "/users")
     };
 
     private final JwtFilter jwtFilter;
@@ -43,7 +48,7 @@ public class SecurityConfig {
                         .authenticationEntryPoint(customAuthenticationEntryPoint))
 
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(PERMIT_ALL_PATTERNS).permitAll()
+                        .requestMatchers(PERMIT_ALL_MATCHERS).permitAll()
                         .anyRequest().authenticated())
 
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
