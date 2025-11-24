@@ -6,6 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.MessageSource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.validation.BindException;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.ObjectError;
@@ -60,7 +61,7 @@ public class GlobalExceptionHandler {
 
         log.error("Unhandled exception", ex);
 
-        if (ex instanceof ServletException) {
+        if (ex instanceof ServletException || ex instanceof AccessDeniedException) {
             throw ex;
         }
 
