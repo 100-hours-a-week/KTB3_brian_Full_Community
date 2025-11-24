@@ -16,6 +16,7 @@ import com.community.domain.user.repository.UserRepository;
 import com.community.global.exception.CustomException;
 import com.community.global.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -103,9 +104,9 @@ public class PostService {
         return new PostIdResponse(id);
     }
 
+    @PreAuthorize("hasPermission(#postId, 'POST','PUT')")
     public PostIdResponse updatePost(Long postId, Long userId, PostUpdateRequest request) {
         Post post = findPost(postId);
-        validateAuthor(post, userId);
 
         post.updateTitle(request.getTitle());
         post.updateBody(request.getBody());
