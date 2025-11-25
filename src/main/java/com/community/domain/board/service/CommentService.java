@@ -16,6 +16,7 @@ import com.community.domain.user.repository.UserRepository;
 import com.community.global.exception.CustomException;
 import com.community.global.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -61,19 +62,17 @@ public class CommentService {
         return new CommentIdResponse(id);
     }
 
+    @PreAuthorize("hasPermission(#commentId , 'COMMENT', {'PUT', #postId})")
     public CommentIdResponse updateComment(Long postId, Long commentId, Long authorId, CommentRequest request) {
         Comment comment = findComment(commentId);
-        validateCommentPost(comment, postId);
-        validateCommentAuthor(comment, authorId);
 
         comment.updateBody(request.getBody());
         return new CommentIdResponse(comment.getId());
     }
 
+    @PreAuthorize("hasPermission(#commentId , 'COMMENT', {'DELETE', #postId})")
     public void deleteComment(Long postId, Long commentId, Long authorId) {
         Comment comment = findComment(commentId);
-        validateCommentPost(comment, postId);
-        validateCommentAuthor(comment, authorId);
 
         commentRepository.delete(comment);
     }
@@ -95,18 +94,6 @@ public class CommentService {
     private Comment findComment(Long commentId) {
         return commentRepository.findById(commentId)
                 .orElseThrow(() -> new CustomException(ErrorCode.COMMENT_NOT_FOUND));
-    }
-
-    private void validateCommentPost(Comment comment, Long postId) {
-        if (!comment.getPost().getId().equals(postId)) {
-            throw new CustomException(ErrorCode.COMMENT_NOT_FOUND);
-        }
-    }
-
-    private void validateCommentAuthor(Comment comment, Long authorId) {
-        if (!comment.getUser().getId().equals(authorId)) {
-            throw new CustomException(ErrorCode.COMMENT_FORBIDDEN);
-        }
     }
 
     private CommentSingleResponse toSingleResponse(Comment comment) {
