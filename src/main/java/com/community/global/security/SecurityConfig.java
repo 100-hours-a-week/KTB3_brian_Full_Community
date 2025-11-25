@@ -29,7 +29,7 @@ public class SecurityConfig {
 
     public static final RequestMatcher[] PERMIT_ALL_MATCHERS = {
             MATCHER.matcher(HttpMethod.POST, "/auth/login"),
-            MATCHER.matcher(HttpMethod.GET, "/users/availability"),
+            MATCHER.matcher(HttpMethod.GET, "/users/availability/**"),
             MATCHER.matcher(HttpMethod.POST, "/users")
     };
 

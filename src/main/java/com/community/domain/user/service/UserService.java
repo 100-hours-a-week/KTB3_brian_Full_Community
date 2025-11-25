@@ -33,7 +33,8 @@ public class UserService {
     private final CommentService commentService;
 
     public SignInResponse signIn(SignInRequest req) {
-        validateDuplicateUser(req.getEmail(), req.getNickname());
+        validateEmailUnique(req.getEmail());
+        validateNicknameUnique(req.getNickname());
 
         MultipartFile file = req.getFile();
         String imageUrl = DEFAULT_IMAGE_URL;
@@ -47,11 +48,15 @@ public class UserService {
     }
 
     @Transactional(readOnly = true)
-    public SignInAvailableResponse checkAvailableSignInInfo(String email, String nickname) {
-        if (email == null && nickname == null) {
-            throw new CustomException(ErrorCode.INVALID_CHECK_SIGN_IN_INFO);
-        }
-        validateDuplicateUser(email, nickname);
+    public SignInAvailableResponse checkEmailAvailability(String email) {
+        validateEmailUnique(email);
+
+        return new SignInAvailableResponse(true);
+    }
+
+    @Transactional(readOnly = true)
+    public SignInAvailableResponse checkNicknameAvailability(String nickname) {
+        validateNicknameUnique(nickname);
 
         return new SignInAvailableResponse(true);
     }
@@ -70,7 +75,7 @@ public class UserService {
 
         if (req.getNickname() != null && !req.getNickname().isBlank()
                 && !req.getNickname().equals(user.getNickname())) {
-            validateDuplicateUser(null, req.getNickname());
+            validateNicknameUnique(req.getNickname());
             user.updateNickname(req.getNickname());
         }
 
@@ -100,19 +105,23 @@ public class UserService {
         userRepository.delete(user);
     }
 
-    private void validateDuplicateUser(String email, String nickname) {
-        if (email != null) {
-            userRepository.findByEmail(email)
-                    .ifPresent(user -> {
-                        throw new CustomException(ErrorCode.DUPLICATED_EMAIL);
-                    });
+    private void validateEmailUnique(String email) {
+        if (email == null) {
+            return;
         }
+        userRepository.findByEmail(email)
+                .ifPresent(user -> {
+                    throw new CustomException(ErrorCode.DUPLICATED_EMAIL);
+                });
+    }
 
-        if (nickname != null) {
-            userRepository.findByNickname(nickname)
-                    .ifPresent(user -> {
-                        throw new CustomException(ErrorCode.DUPLICATED_NICKNAME);
-                    });
+    private void validateNicknameUnique(String nickname) {
+        if (nickname == null) {
+            return;
         }
+        userRepository.findByNickname(nickname)
+                .ifPresent(user -> {
+                    throw new CustomException(ErrorCode.DUPLICATED_NICKNAME);
+                });
     }
 }
