@@ -33,8 +33,8 @@ public class PostPermissionEvaluator implements TargetAwarePermissionEvaluator {
     }
 
     @Override
-    public boolean supports(String targetType) {
-        return TARGET_TYPES.POST.name().equals(targetType);
+    public String supportType() {
+        return TARGET_TYPES.POST.name();
     }
 }
 
