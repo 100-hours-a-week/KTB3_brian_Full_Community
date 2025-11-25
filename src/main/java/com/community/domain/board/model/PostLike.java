@@ -30,4 +30,21 @@ public class PostLike extends BaseTimeEntity {
         this.post = post;
         this.user = user;
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        PostLike postLike = (PostLike) o;
+        return id != null && id.equals(postLike.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return getClass().hashCode();
+    }
 }
