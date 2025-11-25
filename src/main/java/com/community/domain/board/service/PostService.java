@@ -122,9 +122,10 @@ public class PostService {
         return new PostIdResponse(post.getId());
     }
 
+    @PreAuthorize("hasPermission(#postId, 'POST','DELETE')")
     public void deletePost(Long postId, Long userId) {
         Post post = findPost(postId);
-        validateAuthor(post, userId);
+
         fileStorageService.delete(post.getImageUrl());
         postLikeRepository.deleteAllByPostId(postId);
         commentService.deleteAllCommentByPostId(postId);
@@ -188,11 +189,5 @@ public class PostService {
     private User findUser(Long userId) {
         return userRepository.findById(userId)
                 .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND_USER));
-    }
-
-    private void validateAuthor(Post post, Long userId) {
-        if (!post.getUser().getId().equals(userId)) {
-            throw new CustomException(ErrorCode.POST_FORBIDDEN);
-        }
     }
 }
