@@ -83,7 +83,7 @@ public class UserService {
             String previousImageUrl = user.getImageUrl();
             String imageUrl = fileStorageService.save(req.getFile());
             user.updateImageUrl(imageUrl);
-            if (previousImageUrl != null) {
+            if (!previousImageUrl.equals(DEFAULT_IMAGE_URL)) {
                 fileStorageService.delete(previousImageUrl);
             }
         }
@@ -106,9 +106,6 @@ public class UserService {
     }
 
     private void validateEmailUnique(String email) {
-        if (email == null) {
-            return;
-        }
         userRepository.findByEmail(email)
                 .ifPresent(user -> {
                     throw new CustomException(ErrorCode.DUPLICATED_EMAIL);
@@ -116,9 +113,6 @@ public class UserService {
     }
 
     private void validateNicknameUnique(String nickname) {
-        if (nickname == null) {
-            return;
-        }
         userRepository.findByNickname(nickname)
                 .ifPresent(user -> {
                     throw new CustomException(ErrorCode.DUPLICATED_NICKNAME);
