@@ -87,6 +87,31 @@ class UserServiceTest {
     }
 
     @Test
+    @DisplayName("회원가입 시 프로필 이미지를 업로드하지 않으면 기본 이미지를 사용하고 파일 저장을 호출하지 않는다.")
+    void signIn_uses_default_image_when_file_absent() {
+        //given
+        ReflectionTestUtils.setField(userService, "DEFAULT_IMAGE_URL", "http://default");
+        SignInRequest signInRequest = new SignInRequest();
+        signInRequest.setEmail("email@email.com");
+        signInRequest.setPassword("Password1!");
+        signInRequest.setNickname("nickname");
+
+        when(userRepository.findByEmail(signInRequest.getEmail())).thenReturn(Optional.empty());
+        when(userRepository.findByNickname(signInRequest.getNickname())).thenReturn(Optional.empty());
+        when(userRepository.save(any())).thenReturn(1L);
+
+        //when
+        SignInResponse response = userService.signIn(signInRequest);
+
+        //then
+        assertThat(response.getId()).isEqualTo(1L);
+        ArgumentCaptor<User> captor = ArgumentCaptor.forClass(User.class);
+        verify(userRepository).save(captor.capture());
+        assertThat(captor.getValue().getImageUrl()).isEqualTo("http://default");
+        verify(fileStorageService, never()).save(any());
+    }
+
+    @Test
     @DisplayName("회원가입 시 이미지를 추가하지 않으면 기본 이미지를 사용한다.")
     void signIn_use_default_image_when_image_empty() {
 
@@ -248,6 +273,47 @@ class UserServiceTest {
         assertThat(user.getNickname()).isEqualTo("newNick");
         assertThat(user.getImageUrl()).isEqualTo("newImage");
         verify(fileStorageService).delete("oldImage");
+    }
+
+    @Test
+    @DisplayName("회원의 프로필 정보를 수정할 때 닉네임이 그대로면 중복 검사를 하지 않는다.")
+    void updateProfile_skips_nickname_validation_when_same() {
+        //given
+        User user = new User("email@email.com", "pass", "sameNick", "img");
+        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+
+        UpdateRequest req = new UpdateRequest();
+        req.setNickname("sameNick");
+
+        //when
+        userService.updateProfile(1L, req);
+
+        //then
+        assertThat(user.getNickname()).isEqualTo("sameNick");
+        verify(userRepository, never()).findByNickname(any());
+    }
+
+    @Test
+    @DisplayName("회원의 프로필 정보를 수정할 때 기존 이미지가 기본 이미지라면 삭제하지 않는다.")
+    void updateProfile_does_not_delete_default_image_when_previous_image_default() {
+        //given
+        String defaultImageUrl = "defaultImageUrl";
+        String newImageUrl = "newImageUrl";
+        ReflectionTestUtils.setField(userService, "DEFAULT_IMAGE_URL", defaultImageUrl);
+
+        User user = new User("email@email.com", "pass", "nick", defaultImageUrl);
+        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+        when(fileStorageService.save(any())).thenReturn(newImageUrl);
+
+        UpdateRequest req = new UpdateRequest();
+        req.setFile(new MockMultipartFile("file", "avatar.png", "image/png", "img".getBytes()));
+
+        //when
+        userService.updateProfile(1L, req);
+
+        //then
+        assertThat(user.getImageUrl()).isEqualTo(newImageUrl);
+        verify(fileStorageService, never()).delete(any());
     }
 
     @Test
