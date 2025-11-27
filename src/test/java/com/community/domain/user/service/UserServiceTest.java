@@ -112,6 +112,33 @@ class UserServiceTest {
     }
 
     @Test
+    @DisplayName("회원가입 시 빈 파일을 업로드하면 않으면 기본 이미지를 사용하고 파일 저장을 호출하지 않는다.")
+    void signIn_uses_default_image_when_file_empty() {
+        //given
+        ReflectionTestUtils.setField(userService, "DEFAULT_IMAGE_URL", "http://default");
+        MockMultipartFile mockMultipartFile = new MockMultipartFile("file", "".getBytes());
+        SignInRequest signInRequest = new SignInRequest();
+        signInRequest.setEmail("email@email.com");
+        signInRequest.setPassword("Password1!");
+        signInRequest.setNickname("nickname");
+        signInRequest.setFile(mockMultipartFile);
+
+        when(userRepository.findByEmail(signInRequest.getEmail())).thenReturn(Optional.empty());
+        when(userRepository.findByNickname(signInRequest.getNickname())).thenReturn(Optional.empty());
+        when(userRepository.save(any())).thenReturn(1L);
+
+        //when
+        SignInResponse response = userService.signIn(signInRequest);
+
+        //then
+        assertThat(response.getId()).isEqualTo(1L);
+        ArgumentCaptor<User> captor = ArgumentCaptor.forClass(User.class);
+        verify(userRepository).save(captor.capture());
+        assertThat(captor.getValue().getImageUrl()).isEqualTo("http://default");
+        verify(fileStorageService, never()).save(any());
+    }
+
+    @Test
     @DisplayName("회원가입 시 이미지를 추가하지 않으면 기본 이미지를 사용한다.")
     void signIn_use_default_image_when_image_empty() {
 
@@ -294,6 +321,25 @@ class UserServiceTest {
     }
 
     @Test
+    @DisplayName("회원의 프로필 정보를 수정할 때 닉네임이 전달되지 않으면 수정하지 않는다.")
+    void updateProfile_skips_nickname_validation_when_nickname_empty() {
+        //given
+        User user = new User("email@email.com", "pass", "n", "img");
+        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+
+        UpdateRequest req = new UpdateRequest();
+        String emptyNickname = "";
+        req.setNickname(emptyNickname);
+
+        //when
+        userService.updateProfile(1L, req);
+
+        //then
+        assertThat(user.getNickname()).isEqualTo("n");
+        verify(userRepository, never()).findByNickname(emptyNickname);
+    }
+
+    @Test
     @DisplayName("회원의 프로필 정보를 수정할 때 기존 이미지가 기본 이미지라면 삭제하지 않는다.")
     void updateProfile_does_not_delete_default_image_when_previous_image_default() {
         //given
@@ -361,6 +407,28 @@ class UserServiceTest {
 
         //when + then
         assertThrows(CustomException.class, () -> userService.updateProfile(1L, req));
+    }
+
+    @Test
+    @DisplayName("회원이 프로필 정보를 수정할 때 파일이 비어있으면 업데이트 하지 않는다.")
+    void updateProfile_throws_when_file_empty() {
+        //given
+        User user = new User("email@email.com", "pass", "oldNick", "oldImage");
+        MockMultipartFile file = new MockMultipartFile("file", "avatar.png", "image/png", "".getBytes());
+
+        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+        when(userRepository.findByNickname("newNick")).thenReturn(Optional.empty());
+
+        UpdateRequest req = new UpdateRequest();
+        req.setFile(file);
+        req.setNickname("newNick");
+
+        //when
+        userService.updateProfile(1L, req);
+
+        //then
+        assertThat(user.getNickname()).isEqualTo("newNick");
+        verify(fileStorageService, never()).save(any());
     }
 
     @Test
