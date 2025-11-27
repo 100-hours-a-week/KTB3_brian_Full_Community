@@ -1,12 +1,11 @@
-package com.community.domain.auth;
+package com.community.domain.auth.service;
 
+import com.community.domain.auth.TokenType;
 import com.community.domain.auth.dto.AuthenticatedUser;
 import com.community.domain.auth.dto.TokenPayload;
 import com.community.domain.auth.dto.TokenResult;
 import com.community.global.exception.CustomException;
 import com.community.global.exception.ErrorCode;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletRequest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -16,39 +15,37 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpHeaders;
 import org.springframework.security.core.Authentication;
-import org.springframework.test.util.ReflectionTestUtils;
 
-import java.io.IOException;
 import java.time.Instant;
-import java.util.Base64;
 import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.when;
 
+/**
+ * Contract tests verifying the expected behavior of any {@link TokenProvider} implementation.
+ */
 @ExtendWith(MockitoExtension.class)
-class TokenProviderTest {
+public abstract class TokenProviderContractTest {
 
-    private static final String SECRET = "test-secret-key-1234567890";
     private static final long ACCESS_EXPIRES_IN = 60L;
     private static final long REFRESH_EXPIRES_IN = 120L;
-    private JwtTokenProvider tokenProvider;
-    private ObjectMapper objectMapper = new ObjectMapper();
+
+    protected TokenProvider tokenProvider;
 
     @Mock
-    private HttpServletRequest request;
+    protected HttpServletRequest request;
 
     @BeforeEach
-    void setUp() {
-        tokenProvider = new JwtTokenProvider(objectMapper);
-        ReflectionTestUtils.setField(tokenProvider, "ACCESS_TOKEN_EXPIRATION_TIME", ACCESS_EXPIRES_IN);
-        ReflectionTestUtils.setField(tokenProvider, "REFRESH_TOKEN_EXPIRATION_TIME", REFRESH_EXPIRES_IN);
-        ReflectionTestUtils.setField(tokenProvider, "JWT_SECRET", SECRET);
+    void initProvider() {
+        tokenProvider = createTokenProvider(ACCESS_EXPIRES_IN, REFRESH_EXPIRES_IN);
     }
 
+    protected abstract TokenProvider createTokenProvider(long accessExpirationSeconds, long refreshExpirationSeconds);
+
     @Test
-    @DisplayName("토큰 생성 시 TokenResult 를 반환하며 만료 시간과 payload 를 포함한다.")
+    @DisplayName("createToken 으로 생성한 토큰은 parseToken 으로 복호화할 수 있다.")
     void createToken_and_parseToken() {
         TokenResult result = tokenProvider.createToken(Map.of("sub", 42L), TokenType.ACCESS);
 
@@ -59,46 +56,6 @@ class TokenProviderTest {
         assertThat(payload.userId()).isEqualTo(42L);
         assertThat(payload.type()).isEqualTo(TokenType.ACCESS.name());
         assertThat(payload.expiresAt()).isAfter(Instant.now());
-    }
-
-    @Test
-    @DisplayName("토큰의 파트가 3개로 나뉘지 않는 경우 INVALID_TOKEN 예외를 던진다.")
-    void parseToken_throws_when_token_part_invalid() {
-        //given
-        String invalidToken = "token.parts.is.invalid";
-
-        //when + then
-        CustomException customException = assertThrows(CustomException.class, () -> tokenProvider.parseToken(invalidToken, TokenType.ACCESS));
-        assertThat(customException.getErrorCode()).isEqualTo(ErrorCode.INVALID_TOKEN);
-    }
-
-    @Test
-    @DisplayName("토큰의 서명이 일치하지 않는 경우 INVALID_TOKEN 예외를 던진다.")
-    void parseToken_throws_when_token_sign_invalid() throws IOException {
-
-        //given
-        TokenResult tokenResult = tokenProvider.createToken(Map.of("sub", 42L), TokenType.ACCESS);
-        String token = tokenResult.token();
-
-        String[] parts = token.split("\\.");
-        Base64.Decoder BASE64_DECODER = Base64.getUrlDecoder();
-        Base64.Encoder BASE64_ENCODER = Base64.getUrlEncoder().withoutPadding();
-
-        byte[] decode = BASE64_DECODER.decode(parts[1]);
-
-        Map<String, Object> payload = objectMapper.readValue(decode, new TypeReference<>() {
-        });
-
-        payload.put("sub", 41L);
-
-        byte[] updatedPayloadBytes = objectMapper.writeValueAsBytes(payload);
-        String updatedPayload = BASE64_ENCODER.encodeToString(updatedPayloadBytes);
-
-        String newToken = parts[0] + "." + updatedPayload + "." + parts[2];
-
-        //when + then
-        CustomException customException = assertThrows(CustomException.class, () -> tokenProvider.parseToken(newToken, TokenType.ACCESS));
-        assertThat(customException.getErrorCode()).isEqualTo(ErrorCode.INVALID_TOKEN);
     }
 
     @Test
@@ -115,15 +72,11 @@ class TokenProviderTest {
     @Test
     @DisplayName("만료된 토큰은 EXPIRED_TOKEN 예외를 던진다.")
     void parseToken_throws_when_expired() {
-        JwtTokenProvider expiredTokenProvider = new JwtTokenProvider(new ObjectMapper());
-        ReflectionTestUtils.setField(expiredTokenProvider, "ACCESS_TOKEN_EXPIRATION_TIME", -1L);
-        ReflectionTestUtils.setField(expiredTokenProvider, "REFRESH_TOKEN_EXPIRATION_TIME", -1L);
-        ReflectionTestUtils.setField(expiredTokenProvider, "JWT_SECRET", SECRET);
-
-        String expiredToken = expiredTokenProvider.createToken(Map.of("sub", 1L), TokenType.ACCESS).token();
+        TokenProvider expiredProvider = createTokenProvider(-1L, -1L);
+        String expiredToken = expiredProvider.createToken(Map.of("sub", 1L), TokenType.ACCESS).token();
 
         CustomException ex = assertThrows(CustomException.class,
-                () -> expiredTokenProvider.parseToken(expiredToken, TokenType.ACCESS));
+                () -> expiredProvider.parseToken(expiredToken, TokenType.ACCESS));
         assertThat(ex.getErrorCode()).isEqualTo(ErrorCode.EXPIRED_TOKEN);
     }
 
