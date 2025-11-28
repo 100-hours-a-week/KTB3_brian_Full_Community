@@ -100,8 +100,7 @@ public class UserService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND_USER));
         fileStorageService.delete(user.getImageUrl());
-        postService.deleteAllPostByUserId(userId);
-        commentService.deleteAllCommentsByUserId(userId);
+
         userRepository.delete(user);
     }
 

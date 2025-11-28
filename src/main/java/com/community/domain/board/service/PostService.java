@@ -127,8 +127,7 @@ public class PostService {
         Post post = findPost(postId);
 
         fileStorageService.delete(post.getImageUrl());
-        postLikeRepository.deleteAllByPostId(postId);
-        commentService.deleteAllCommentByPostId(postId);
+
         postRepository.delete(post);
     }
 
