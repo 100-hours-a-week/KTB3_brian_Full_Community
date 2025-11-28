@@ -77,10 +77,6 @@ public class CommentService {
         commentRepository.delete(comment);
     }
 
-    public void deleteAllCommentByPostId(Long postId) {
-        commentRepository.deleteByPostId(postId);
-    }
-
     @Transactional(readOnly = true)
     public Long countComments(Long postId) {
         return commentRepository.countByPostId(postId);
@@ -111,9 +107,5 @@ public class CommentService {
         User user = userRepository.findById(authorId)
                 .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND_USER));
         return new AuthorResponse(user.getId(), user.getNickname(), user.getImageUrl());
-    }
-
-    public void deleteAllCommentsByUserId(Long userId) {
-        commentRepository.deleteByUserId(userId);
     }
 }
