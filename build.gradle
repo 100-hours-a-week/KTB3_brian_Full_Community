@@ -2,6 +2,8 @@ plugins {
 	id 'java'
 	id 'org.springframework.boot' version '3.5.6'
 	id 'io.spring.dependency-management' version '1.1.7'
+
+    id 'info.solidsoft.pitest' version '1.15.0'
 }
 
 group = 'com'
@@ -36,6 +38,7 @@ dependencies {
 
 
     runtimeOnly 'com.mysql:mysql-connector-j'
+    runtimeOnly 'com.h2database:h2'
 
     compileOnly 'org.projectlombok:lombok'
 
@@ -54,4 +57,26 @@ dependencies {
 
 tasks.named('test') {
 	useJUnitPlatform()
+}
+
+def pitestLauncher = javaToolchains.launcherFor {
+    languageVersion = JavaLanguageVersion.of(21)
+}.get()
+
+pitest {
+    pitestVersion = '1.22.0'
+    junit5PluginVersion = '1.2.3'
+
+    targetClasses = ['com.community.domain.user.service.*', 'com.community.domain.auth.*']
+    // targetTests 생략 or 'com.community..*Test'
+
+    mutators = ['STRONGER']
+
+    reportDir = layout.buildDirectory.dir("reports/pitest").get().asFile
+    outputFormats = ['HTML', 'XML']
+    threads = 4
+    timestampedReports = false
+
+    // ★ 여기서 PIT 이 사용할 java 를 21로 지정
+    jvmPath = pitestLauncher.executablePath.asFile.absolutePath
 }
