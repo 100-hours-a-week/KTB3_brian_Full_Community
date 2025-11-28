@@ -127,16 +127,7 @@ public class PostService {
         Post post = findPost(postId);
 
         fileStorageService.delete(post.getImageUrl());
-
         postRepository.delete(post);
-    }
-
-    public void deleteAllPostByUserId(Long userId) {
-        List<Post> postList = postRepository.findAllByUserId(userId);
-
-        for (Post post : postList) {
-            deletePost(post.getId(), userId);
-        }
     }
 
     public PostLikeResponse toggleLike(Long postId, Long userId) {
