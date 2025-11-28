@@ -1,6 +1,7 @@
 package com.community.domain.user.repository;
 
 
+import static com.community.helper.UserMaker.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.Optional;
@@ -24,18 +25,6 @@ public class UserRepositoryTest {
 
     @Autowired
     private TestEntityManager entityManager;
-
-    private static User newUser(String email, String password, String nickname, String imageUrl) {
-        return new User(email, password, nickname, imageUrl);
-    }
-
-    private static User getDefaultUser() {
-        return getNumberedUser(1);
-    }
-
-    private static User getNumberedUser(int num) {
-        return newUser("test" + num + "@email.com", "password", "test" + num, "imageURL" + num);
-    }
 
     @Test
     @DisplayName("새로운 회원을 저장하는 경우 id 를 할당받게 되고, id 를 기준으로 조회할 수 있다.")
