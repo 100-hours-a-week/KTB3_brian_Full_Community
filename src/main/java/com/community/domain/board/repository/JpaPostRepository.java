@@ -83,7 +83,8 @@ public class JpaPostRepository implements PostRepository {
                 .setMaxResults(size)
                 .getResultList();
 
-        Long totalElements = em.createQuery("select count(p) from Post p", Long.class)
+        Long totalElements = em.createQuery("select count(p) from Post p where p.user.id = :userId", Long.class)
+                .setParameter("userId", userId)
                 .getSingleResult();
 
         int totalPages = PageUtil.calculateTotalPages(totalElements, size);
@@ -108,7 +109,8 @@ public class JpaPostRepository implements PostRepository {
                 .setMaxResults(size)
                 .getResultList();
 
-        Long totalElements = em.createQuery("select count(p) from Post p", Long.class)
+        Long totalElements = em.createQuery("select count(p) from PostLike pl join pl.post p where pl.user.id = :userId", Long.class)
+                .setParameter("userId", userId)
                 .getSingleResult();
 
         int totalPages = PageUtil.calculateTotalPages(totalElements, size);

@@ -17,5 +17,5 @@ public interface PostRepository {
     List<Post> findAllByUserId(Long userId);
     void increaseViewCount(Long postId, long increment);
     PageResult<Post> findByUserId(Long userId, PaginationRequest paginationRequest);
-    PageResult<Post> findByPostLikeUserId(Long postId, PaginationRequest paginationRequest);
+    PageResult<Post> findByPostLikeUserId(Long userId, PaginationRequest paginationRequest);
 }
