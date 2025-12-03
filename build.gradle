@@ -67,8 +67,7 @@ pitest {
     pitestVersion = '1.22.0'
     junit5PluginVersion = '1.2.3'
 
-    targetClasses = ['com.community.domain.user.service.*', 'com.community.domain.auth.*']
-    // targetTests 생략 or 'com.community..*Test'
+    targetClasses = ['com.community.domain.user.*', 'com.community.domain.auth.*', 'com.community.domain.board.*']
 
     mutators = ['STRONGER']
 
