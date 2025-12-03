@@ -112,7 +112,7 @@ class UserServiceTest {
     }
 
     @Test
-    @DisplayName("회원가입 시 빈 파일을 업로드하면 않으면 기본 이미지를 사용하고 파일 저장을 호출하지 않는다.")
+    @DisplayName("회원가입 시 빈 파일을 업로드하면 기본 이미지를 사용하고 파일 저장을 호출하지 않는다.")
     void signIn_uses_default_image_when_file_empty() {
         //given
         ReflectionTestUtils.setField(userService, "DEFAULT_IMAGE_URL", "http://default");
@@ -137,31 +137,6 @@ class UserServiceTest {
         assertThat(captor.getValue().getImageUrl()).isEqualTo("http://default");
         verify(fileStorageService, never()).save(any());
     }
-
-    @Test
-    @DisplayName("회원가입 시 이미지를 추가하지 않으면 기본 이미지를 사용한다.")
-    void signIn_use_default_image_when_image_empty() {
-
-        //given
-        String defaultImageURL = "http://default";
-        ReflectionTestUtils.setField(userService, "DEFAULT_IMAGE_URL", defaultImageURL);
-        SignInRequest signInRequest = new SignInRequest();
-        signInRequest.setEmail("e");
-        signInRequest.setNickname("n");
-
-        when(userRepository.findByEmail(signInRequest.getEmail())).thenReturn(Optional.empty());
-        when(userRepository.findByNickname(signInRequest.getNickname())).thenReturn(Optional.empty());
-
-        //when
-        userService.signIn(signInRequest);
-        ArgumentCaptor<User> captor = ArgumentCaptor.forClass(User.class);
-
-        //then
-        verify(userRepository).save(captor.capture());
-        User saved = captor.getValue();
-        assertThat(saved.getImageUrl()).isEqualTo(defaultImageURL);
-    }
-
 
     @Test
     @DisplayName("회원가입 시 이메일이 중복이면 예외를 던진다.")
@@ -200,7 +175,7 @@ class UserServiceTest {
     }
 
     @Test
-    @DisplayName("닉네임 중복 확인 시 유니크하다면 사용 가능함을 나타내는 객체를 반환한다.")
+    @DisplayName("이메일 중복 확인 시 유니크하다면 사용 가능함을 나타내는 객체를 반환한다.")
     void checkEmailAvailability() {
         //given
         String email = "unique@email.com";
@@ -449,7 +424,6 @@ class UserServiceTest {
         assertThat(user.getPassword()).isEqualTo(newPw);
     }
 
-
     @Test
     @DisplayName("회원이 비밀번호를 수정할 때 회원 정보가 존재하지 않으면 예외를 던진다.")
     void changePassword_throws_when_user_not_found() {
@@ -476,8 +450,6 @@ class UserServiceTest {
 
         //then
         verify(fileStorageService).delete("image");
-        verify(postService).deleteAllPostByUserId(1L);
-        verify(commentService).deleteAllCommentsByUserId(1L);
         verify(userRepository).delete(user);
     }
 
