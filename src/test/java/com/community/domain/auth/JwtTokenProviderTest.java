@@ -1,6 +1,7 @@
 package com.community.domain.auth;
 
 import com.community.domain.auth.dto.TokenResult;
+import com.community.domain.auth.service.JwtTokenProvider;
 import com.community.domain.auth.service.TokenProvider;
 import com.community.domain.auth.service.TokenProviderContractTest;
 import com.community.global.exception.CustomException;

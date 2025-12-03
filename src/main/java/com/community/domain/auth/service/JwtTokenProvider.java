@@ -1,9 +1,9 @@
-package com.community.domain.auth;
+package com.community.domain.auth.service;
 
+import com.community.domain.auth.TokenType;
 import com.community.domain.auth.dto.AuthenticatedUser;
 import com.community.domain.auth.dto.TokenPayload;
 import com.community.domain.auth.dto.TokenResult;
-import com.community.domain.auth.service.TokenProvider;
 import com.community.global.exception.CustomException;
 import com.community.global.exception.ErrorCode;
 import com.fasterxml.jackson.core.JsonProcessingException;
