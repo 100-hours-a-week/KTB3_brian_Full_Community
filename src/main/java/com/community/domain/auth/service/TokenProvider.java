@@ -1,17 +1,20 @@
 package com.community.domain.auth.service;
 
+import com.community.domain.auth.TokenType;
 import com.community.domain.auth.dto.TokenPayload;
 import com.community.domain.auth.dto.TokenResult;
+import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.security.core.Authentication;
 
 import java.util.Map;
 
 public interface TokenProvider {
 
-    TokenPayload parseAccessToken(String accessToken);
+    TokenPayload parseToken(String accessToken, TokenType tokenType);
 
-    TokenPayload parseRefreshToken(String refreshToken);
+    TokenResult createToken(Map<String, Object> claims, TokenType tokenType);
 
-    TokenResult createAccessToken(Map<String, Object> claims);
+    String resolveToken(HttpServletRequest request);
 
-    TokenResult createRefreshToken(Map<String, Object> claims);
+    Authentication getAuthentication(String token);
 }

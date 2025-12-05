@@ -1,4 +1,4 @@
-package com.community.domain.auth.service;
+package com.community.domain.auth.utils;
 
 import com.community.domain.auth.dto.LoginResult;
 import com.community.domain.auth.dto.response.LoginResponse;

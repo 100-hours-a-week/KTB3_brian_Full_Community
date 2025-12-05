@@ -16,6 +16,7 @@ import com.community.domain.user.repository.UserRepository;
 import com.community.global.exception.CustomException;
 import com.community.global.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -103,9 +104,9 @@ public class PostService {
         return new PostIdResponse(id);
     }
 
+    @PreAuthorize("hasPermission(#postId, 'POST','PUT')")
     public PostIdResponse updatePost(Long postId, Long userId, PostUpdateRequest request) {
         Post post = findPost(postId);
-        validateAuthor(post, userId);
 
         post.updateTitle(request.getTitle());
         post.updateBody(request.getBody());
@@ -121,21 +122,12 @@ public class PostService {
         return new PostIdResponse(post.getId());
     }
 
+    @PreAuthorize("hasPermission(#postId, 'POST','DELETE')")
     public void deletePost(Long postId, Long userId) {
         Post post = findPost(postId);
-        validateAuthor(post, userId);
+
         fileStorageService.delete(post.getImageUrl());
-        postLikeRepository.deleteAllByPostId(postId);
-        commentService.deleteAllCommentByPostId(postId);
         postRepository.delete(post);
-    }
-
-    public void deleteAllPostByUserId(Long userId) {
-        List<Post> postList = postRepository.findAllByUserId(userId);
-
-        for (Post post : postList) {
-            deletePost(post.getId(), userId);
-        }
     }
 
     public PostLikeResponse toggleLike(Long postId, Long userId) {
@@ -187,11 +179,5 @@ public class PostService {
     private User findUser(Long userId) {
         return userRepository.findById(userId)
                 .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND_USER));
-    }
-
-    private void validateAuthor(Post post, Long userId) {
-        if (!post.getUser().getId().equals(userId)) {
-            throw new CustomException(ErrorCode.POST_FORBIDDEN);
-        }
     }
 }

@@ -1,7 +1,7 @@
 package com.community.domain.auth.controller;
 
 import com.community.domain.auth.dto.LoginResult;
-import com.community.domain.auth.service.AuthResponseMaker;
+import com.community.domain.auth.utils.AuthResponseMaker;
 import com.community.domain.auth.service.AuthService;
 import com.community.domain.auth.dto.response.LoginResponse;
 import com.community.domain.auth.dto.request.LoginRequest;

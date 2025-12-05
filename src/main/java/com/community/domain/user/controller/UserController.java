@@ -13,8 +13,8 @@ import com.community.domain.user.dto.response.UserResponse;
 import com.community.domain.user.service.UserService;
 import com.community.global.response.ApiResponse;
 import com.community.global.response.SuccessMessage;
-import jakarta.annotation.Nullable;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -39,10 +39,18 @@ public class UserController implements UserApiSpec {
     }
 
     @Override
-    @GetMapping("/availability")
-    public ResponseEntity<ApiResponse<SignInAvailableResponse>> checkAvailableSignInInfo(@RequestParam @Nullable String email,
-                                                                                         @RequestParam @Nullable String nickname) {
-        SignInAvailableResponse res = userService.checkAvailableSignInInfo(email, nickname);
+    @GetMapping("/availability/email")
+    public ResponseEntity<ApiResponse<SignInAvailableResponse>> checkEmailAvailability(@RequestParam @NotBlank String email) {
+        SignInAvailableResponse res = userService.checkEmailAvailability(email);
+        return ResponseEntity
+                .ok()
+                .body(ApiResponse.success(SuccessMessage.SIGN_UP_INFO_AVAILABLE, res));
+    }
+
+    @Override
+    @GetMapping("/availability/nickname")
+    public ResponseEntity<ApiResponse<SignInAvailableResponse>> checkNicknameAvailability(@RequestParam @NotBlank String nickname) {
+        SignInAvailableResponse res = userService.checkNicknameAvailability(nickname);
         return ResponseEntity
                 .ok()
                 .body(ApiResponse.success(SuccessMessage.SIGN_UP_INFO_AVAILABLE, res));

@@ -36,6 +36,23 @@ public class PostViewEvent {
         this.status = Status.PENDING;
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        PostViewEvent that = (PostViewEvent) o;
+        return id != null && id.equals(that.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return getClass().hashCode();
+    }
+
     public enum Status {
         PENDING,
         DONE
