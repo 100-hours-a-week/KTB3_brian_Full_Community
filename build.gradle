@@ -4,6 +4,7 @@ plugins {
 	id 'io.spring.dependency-management' version '1.1.7'
 
     id 'info.solidsoft.pitest' version '1.15.0'
+    id 'jacoco'
 }
 
 group = 'com'
@@ -55,8 +56,9 @@ dependencies {
     testAnnotationProcessor("org.projectlombok:lombok")
 }
 
-tasks.named('test') {
+test {
 	useJUnitPlatform()
+    finalizedBy jacocoTestReport, jacocoTestCoverageVerification
 }
 
 def pitestLauncher = javaToolchains.launcherFor {
@@ -78,4 +80,52 @@ pitest {
 
     // ★ 여기서 PIT 이 사용할 java 를 21로 지정
     jvmPath = pitestLauncher.executablePath.asFile.absolutePath
+}
+
+jacocoTestCoverageVerification {
+    violationRules {
+        rule {
+            element = 'PACKAGE'
+            includes = ['com.community.domain.*.service']
+
+            limit {
+                counter = 'LINE'
+                value = 'COVEREDRATIO'
+                minimum = 0.80
+            }
+        }
+
+        rule {
+            element = 'PACKAGE'
+            includes = ['com.community.domain.*.repository']
+
+            limit {
+                counter = 'LINE'
+                value = 'COVEREDRATIO'
+                minimum = 0.60
+            }
+        }
+    }
+}
+
+jacocoTestReport {
+    dependsOn test
+
+    reports {
+        xml.required.set(true)     // SonarQube 등 연동용
+        csv.required.set(false)
+        html.required.set(true)    // 우리가 보기 좋은 HTML 리포트
+        html.outputLocation.set(layout.buildDirectory.dir("reports/jacoco").get())
+    }
+
+    classDirectories.setFrom(
+        files(classDirectories.files.collect { dir ->
+            fileTree(dir: dir, exclude: [
+                    '**/config/**',
+                    '**/dto/**',
+                    '**/model/**',
+                    '**/*Application*'    // main 앱 클래스
+            ])
+        })
+    )
 }
